@@ -1,0 +1,109 @@
+cmake_minimum_required(VERSION 3.5)
+project(RentCar LANGUAGES CXX)
+
+# Add local project module path so CMake includes custom CMake modules.
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/Modules")
+
+include(CTest)
+enable_testing()
+
+add_library(rentcar
+	src/RentCar.h
+	src/RentCar.cpp
+)
+target_include_directories(rentcar
+	PUBLIC
+		src
+)
+target_compile_options(rentcar
+	PRIVATE
+		$<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+			-Werror -Wall -Wextra>
+		$<$<CXX_COMPILER_ID:MSVC>:
+			/W4>
+)
+
+#
+# Create a library target for the docopt.cpp command line parsing library.
+#
+add_library(docopt
+	src/docopt/docopt.h
+	src/docopt/docopt_private.h
+	src/docopt/docopt_util.h
+	src/docopt/docopt_value.h
+	src/docopt/docopt.cpp
+)
+target_compile_features(docopt
+	PUBLIC
+		cxx_std_11
+)
+
+add_executable(say_rentcar
+	src/mainCatch2.cpp
+)
+target_link_libraries(say_rentcar
+	PRIVATE
+		rentcar
+		docopt
+)
+target_compile_options(rentcar
+	PRIVATE
+		$<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+			-Werror -Wall -Wextra>carrent
+		$<$<CXX_COMPILER_ID:MSVC>:
+			/W4>
+)
+
+#
+# Create a library target for the Catch header-only test framework.
+#
+add_library(Catch INTERFACE)
+target_include_directories(Catch
+	INTERFACE
+		tests/
+)
+
+#
+# Create a target for executing the Catch unit tests.
+#
+add_executable(unit_tests
+	mainCatch2.cpp
+	tests/unitTests.cpp
+)
+target_include_directories(unit_tests
+	PUBLIC
+		tests/
+)
+target_link_libraries(unit_tests
+	Catch
+	rentcar
+)
+target_compile_options(unit_tests
+	PRIVATE
+		$<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+			-Werror -Wall -Wextra>
+		$<$<CXX_COMPILER_ID:MSVC>:
+			/W4>
+)
+
+# Load and use the .cmake file provided by Catch so all the test cases
+# are made available to CTest.
+include(CatchTestsConfig)
+CatchTestsConfig(unit_tests)
+
+install(
+	TARGETS unit_tests
+	RUNTIME DESTINATION bin
+)
+
+set(CPACK_PACKAGE_NAME "carrent")
+set(CPACK_PACKAGE_VENDOR "erichschroeter.com")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "carrent")
+set(CPACK_PACKAGE_VERSION "1.0.0")
+set(CPACK_PACKAGE_VERSION_MAJOR "1")
+set(CPACK_PACKAGE_VERSION_MINOR "0")
+set(CPACK_PACKAGE_VERSION_PATCH "0")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "carrent CPack Component")
+
+# This must always be last!
+include(CPack)
